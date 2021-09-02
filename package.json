@@ -5,12 +5,17 @@
   "main": "app.js",
   "scripts": {
     "start": "node server/app",
-    "dev": "nodemon server/app"
+    "server": "nodemon server/app",
+    "client": "cd react-client && npm run start",
+    "dev": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "needle": "^2.6.0",
