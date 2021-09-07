@@ -5,12 +5,15 @@ const router = express.Router();
 const ruleFunctions = require('../strategies/ruleFunctions');
 const socketIO = require('socket.io');
 
-//*** MAYBE ISSUE WITH ASYNC FOR HANDLING POST REQUESTS - USE PROMISES INSTEAD??? https://stackoverflow.com/questions/56119131/node-js-and-express-wait-for-asynchronous-operation-before-responding-to-http-r */
+const needle = require('needle') //http client to make our requests
+const config = require('dotenv').config() //to use .env file - to get token
+const TOKEN = process.env.TWITTER_BEARER_TOKEN
+
 // POST Request - set the rules array, stream tweets
 router.post("/",  async (req, res) => {
     res.header("Access-Control-Allow-Origin", "*");
 
-    console.log("POST MALONE");
+    console.log("REAL-TIME TWITTER FEED POST REQUEST");
 
     var rulesArray = [];
     var rules = req.body.rules;
@@ -55,7 +58,29 @@ router.post("/",  async (req, res) => {
         ruleFunctions.streamTweets(io)
 
     //})
+    res.status(200);
+});
 
+// POST Request - get recent tweets for sentiment analysis
+router.post("/sentiment",  async (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+
+    console.log("SENTIMENT ANALYSIS POST REQUEST");
+
+    //get user inputted keyword to search
+    var query = req.body.query;
+    //const tweetURL = `https://api.twitter.com/2/tweets/search/recent?query=${query}&max_results=20`
+    const tweetURL = `https://api.twitter.com/2/tweets/search/recent?query=${query}%20-is:retweet%20-is:reply&max_results=20`  //exclude retweets and replies, '-' is negation
+
+    const response = await needle('get', tweetURL, { //specified in needle documentation
+        headers: {
+            Authorization: `Bearer ${TOKEN}`
+        }
+    })
+
+    //console.log(response.body.data);
+
+    res.status(200).json(response.body.data); //return 20 most recent tweets of the query
 });
 
 
