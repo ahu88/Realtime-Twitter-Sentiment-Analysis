@@ -5,6 +5,9 @@ const router = express.Router();
 const ruleFunctions = require('../strategies/ruleFunctions');
 const socketIO = require('socket.io');
 
+//database model for recent searches
+const RecentSearch = require('../models/recentSearch')
+
 const needle = require('needle') //http client to make our requests
 const config = require('dotenv').config() //to use .env file - to get token
 const TOKEN = process.env.TWITTER_BEARER_TOKEN
@@ -83,5 +86,72 @@ router.post("/sentiment",  async (req, res) => {
     res.status(200).json(response.body.data); //return 20 most recent tweets of the query
 });
 
+// GET request - return ALL recent searches stored in mongoDB
+router.get("/getRecentSearches",  async (req, res) => {
+  try {
+    const recentSearches = await RecentSearch.find(); //async call, get all objects in the recentSearch db  
+    console.log("recentSearches: " + recentSearches);
+    res.send(recentSearches);
+  } 
+  catch(err) {
+    res.status(500).json({ message: err.message }); //500 => server failed, not user's fault
+  }
+});
+
+// POST request - add recent search to be stored in mongoDB
+router.post("/addRecentSearch",  async (req, res) => {
+  console.log("ADDRECENTSEARCH");
+  console.log(req.body.value);
+  //create db model, populate with req from client
+  const recentSearch = new RecentSearch({
+    value: req.body.value
+  })
+  //save model in database -> asynchronous
+  try {
+    const newRecentSearch = await recentSearch.save(); //async call to persist this db object to database
+    res.status(201).json(newRecentSearch); //201 = Successfully created object! More specific success -> for Post routes
+  }
+  catch (err) {
+    res.status(400).json({ message: err.message }); //400 => user gave bad data
+  }
+});
+
+//delete specified recent search
+//use getRecentSearch middleware, don't need to call, just put it before actual function
+router.post("/deleteRecentSearch", getRecentSearch, async (req, res) => {
+  try {
+    //try to remove 
+    console.log("deleteRecentSearch")
+    console.log(res.recentSearch);
+    await res.recentSearch.remove()
+    res.json({ message: 'Deleted recent search' })
+  } 
+  catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+});
+
+//TODO: update frontend and backend to delete by id, not value
+//middleware to get specific recent search by value, next is callback function to call after
+async function getRecentSearch(req, res, next) {
+  let recentSearch
+  try {
+    console.log("GETRECENTSEARCH")
+    console.log(req.body.value);
+    //recentSearch = await RecentSearch.findById(req.params.id)
+    recentSearch = await RecentSearch.findOne({ value: req.body.value })
+    if (recentSearch == null) {
+      return res.status(404).json({ message: 'Cannot find recentSearch' })
+    }
+    //console.log(recentSearch);
+  }
+  catch (err) {
+    return res.status(500).json({ message: err.message })
+  }
+
+  res.recentSearch = recentSearch //so all the other functions can just call res.recentSearch for the set recentSearch
+  //call next function (deleteRecentSearch, etc.)
+  next()
+}
 
 module.exports = router;

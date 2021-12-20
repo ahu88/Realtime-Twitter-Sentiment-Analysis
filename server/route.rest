@@ -1,0 +1,15 @@
+POST http://localhost:4001/addRecentSearch
+
+Content-Type: application/json
+{
+    "value": "Test89898988"
+}
+
+# ###
+
+# DELETE http://localhost:4001/deleteRecentSearch
+
+# Content-Type: application/json
+# {
+#     "id": "61b553c3c42c9fb7c9019763"
+# }
