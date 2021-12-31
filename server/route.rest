@@ -2,7 +2,7 @@ POST http://localhost:4001/addRecentSearch
 
 Content-Type: application/json
 {
-    "value": "Test89898988"
+    "value": "123123123123"
 }
 
 # ###
