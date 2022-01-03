@@ -63,8 +63,6 @@ async function processTweetData(tweet) {
   }else if(sentiment_score >= SentimentThreshold.Negative){
     tweet_sentiment = 'negative'
   }
-  
-  //console.log("tweet_sentiment: " + tweet_sentiment);
 
   twitterData = {
     sentiment: tweet_sentiment,
@@ -89,8 +87,7 @@ function getSentimentScore(text) {
   // Perform truncation and padding.
   const paddedSequence = padSequences([sequence], metadata.max_len);
   const input = tf.tensor2d(paddedSequence, [1, metadata.max_len]);
-      
-  // ***
+
   const predictOut = model.predict(input);
   const score = predictOut.dataSync()[0];
   predictOut.dispose();
